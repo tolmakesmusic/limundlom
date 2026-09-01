@@ -404,7 +404,9 @@ function renderDetail(ep){
   const back = document.createElement('button');
   back.className = 'back-link';
   back.textContent = '← Alle Folgen';
-  back.addEventListener('click', () => { window.location.hash = ''; });
+  back.addEventListener('click', () => {
+    window.location.hash = '';
+  });
   app.appendChild(back);
 
   const title = document.createElement('h2');
@@ -420,8 +422,14 @@ function renderDetail(ep){
     return;
   }
 
-  const mode = bothAvailable ? chosen : (ep.hasMp3 ? 'audio' : 'video');
+  const mode = bothAvailable
+    ? chosen
+    : (ep.hasMp3 ? 'audio' : 'video');
+
   renderPlayer(ep, mode, bothAvailable);
+
+  // Kommentare gehören zur Detailseite der Folge
+  renderComments(ep.number);
 }
 
 function renderChoice(ep){
