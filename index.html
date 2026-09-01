@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lim und Lom</title>
+<style>
+:root{
+  --bg:#0b0c10;--bg-panel:#15171d;--bg-panel-2:#1c1f28;--border:#262b36;
+  --accent:#ffb454;--accent-soft:rgba(255,180,84,.15);--text:#f5f2ea;--text-dim:#9a9ba3;
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;min-height:100vh;font-family:"Segoe UI",Arial,sans-serif;color:var(--text);
+  background:radial-gradient(circle at 15% 0%,rgba(255,180,84,.08),transparent 45%),
+             radial-gradient(circle at 85% 100%,rgba(255,180,84,.05),transparent 45%),var(--bg);
+  background-attachment:fixed;
+}
+button{font-family:inherit;cursor:pointer}
+.site-header{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;
+  padding:16px 24px;background:rgba(11,12,16,.9);border-bottom:1px solid var(--border);
+  backdrop-filter:blur(6px);
+}
+.on-air-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:blink 1.6s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.site-title{font-size:19px;font-weight:800;letter-spacing:.4px}.site-title span{color:var(--accent)}
+.main-nav{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.nav-link{border:1px solid transparent;background:none;color:var(--text-dim);padding:8px 11px;border-radius:8px;font:inherit;font-size:14px}
+.nav-link:hover,.nav-link.active{color:var(--text);background:var(--accent-soft);border-color:var(--border)}
+.stage{max-width:980px;margin:0 auto;padding:34px 20px 70px}
+.info-panel,.weekly-box,.player-box{background:var(--bg-panel);border:1px solid var(--border);border-radius:16px;padding:26px;line-height:1.7}
+.info-panel h2,.weekly-box h2{margin-top:0}.info-panel p,.weekly-box p{color:var(--text-dim)}
+.loading,.empty-state{text-align:center;padding:70px 10px;color:var(--text-dim)}
+.empty-state .big{font-size:38px;margin-bottom:14px}
+.bars{display:flex;justify-content:center;gap:5px;margin-bottom:16px}.bars span{width:5px;height:26px;background:var(--accent);border-radius:3px;animation:eq 1s ease-in-out infinite}
+.bars span:nth-child(2){animation-delay:.15s}.bars span:nth-child(3){animation-delay:.3s}.bars span:nth-child(4){animation-delay:.45s}.bars span:nth-child(5){animation-delay:.6s}
+@keyframes eq{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+.list-title{font-size:26px;font-weight:800;margin:0 0 22px}
+.episode-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px}
+.episode-card{
+  padding:0;background:var(--bg-panel);color:var(--text);border:1px solid var(--border);border-radius:14px;
+  overflow:hidden;text-align:left;display:flex;flex-direction:column;transition:transform .15s,border-color .15s
+}
+.episode-card:hover{transform:translateY(-3px);border-color:var(--accent)}
+.thumb{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--bg-panel-2)}
+.thumb-fallback{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,var(--bg-panel-2),var(--bg-panel));font-size:40px;color:var(--accent)}
+.card-body{padding:12px 14px 16px}.card-title{font-weight:700;font-size:15px;margin:0 0 6px}.card-tags{font-size:12px;color:var(--text-dim);margin:0}.card-tags span{margin-right:8px}
+.back-link{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--text-dim);font-size:14px;margin-bottom:20px;padding:0}
+.back-link:hover{color:var(--accent)}.detail-title{font-size:28px;font-weight:800;margin:0 0 20px}
+.choice-box{text-align:center;padding:40px 10px}.choice-box p{color:var(--text-dim);margin-bottom:22px;font-size:15px}
+.choice-row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.choice-btn{width:170px;padding:26px 16px;border-radius:14px;border:1px solid var(--border);background:var(--bg-panel);color:var(--text);font-size:16px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:10px;transition:all .15s}
+.choice-btn:hover{border-color:var(--accent);background:var(--accent-soft)}.choice-btn .icon{font-size:32px}
+.cover-img{width:100%;max-height:420px;object-fit:cover;border-radius:12px;margin-bottom:18px;display:block}
+.cover-fallback{width:100%;aspect-ratio:16/9;border-radius:12px;margin-bottom:18px;display:flex;align-items:center;justify-content:center;font-size:46px;color:var(--accent);background:linear-gradient(160deg,var(--bg-panel-2),var(--bg-panel))}
+audio,video{width:100%;border-radius:10px;outline:none}video{max-height:520px;background:#000}
+.switch-format{display:inline-block;margin-top:14px;font-size:13px;color:var(--text-dim);background:none;border:none;text-decoration:underline;padding:0}
+.switch-format:hover{color:var(--accent)}
+.gallery-title{font-size:16px;font-weight:700;margin:32px 0 14px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}.gallery-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:transform .15s}
+.gallery-grid img:hover{transform:scale(1.03)}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;display:flex;align-items:center;justify-content:center;padding:30px}
+.lightbox img{max-width:100%;max-height:100%;border-radius:10px}
+.comment-section{margin-top:32px;padding-top:28px;border-top:1px solid var(--border)}
+.comment-section h3{margin:0 0 18px}.comment-form{background:var(--bg-panel);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:22px}
+.comment-form label{display:block;font-size:13px;color:var(--text-dim);margin:0 0 6px}
+.comment-form input,.comment-form textarea{width:100%;border:1px solid var(--border);background:var(--bg-panel-2);color:var(--text);border-radius:9px;padding:11px 12px;font:inherit;margin:0 0 14px}
+.comment-form textarea{min-height:110px;resize:vertical}.comment-form input:focus,.comment-form textarea:focus{outline:none;border-color:var(--accent)}
+.comment-submit{border:1px solid var(--accent);background:var(--accent);color:#111;padding:10px 15px;border-radius:8px;font-weight:700}
+.comment-submit:disabled{opacity:.55;cursor:not-allowed}.comment-status{margin-top:12px;font-size:14px}.comment-status.error{color:#ff8d8d}.comment-status.success{color:#8fe3a1}
+.comments-list{display:flex;flex-direction:column;gap:12px}.comment-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:17px 18px}
+.comment-meta{display:flex;justify-content:space-between;gap:15px;margin-bottom:9px}.comment-name{font-weight:750}.comment-date{color:var(--text-dim);font-size:12px}
+.comment-text{color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6}.comment-empty{color:var(--text-dim)}.char-count{color:var(--text-dim);font-size:12px;margin:-7px 0 13px}
+@media(max-width:700px){.site-header{align-items:flex-start;flex-wrap:wrap}.main-nav{width:100%;margin-left:0}.nav-link{flex:1;min-width:70px}}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="on-air-dot" aria-hidden="true"></div>
+  <div class="site-title">Lim und <span>Lom</span></div>
+  <nav class="main-nav" aria-label="Hauptnavigation">
+    <button class="nav-link" data-page="folgen">Folgen</button>
+    <button class="nav-link" data-page="witz">Witz der Woche</button>
+    <button class="nav-link" data-page="infos">Infos</button>
+    <button class="nav-link" data-page="ueber-uns">Über uns</button>
+  </nav>
+</header>
+
+<main class="stage">
+  <div id="app"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* =========================================================
+   Lim und Lom – Konfiguration
+   Dateien im Repository:
+   Folgen/Folge1.mp3
+   Folgen/Folge2.mp3
+   Images/Folge1.png
+   Images/Folge2.png (falls vorhanden)
+   Weitere Bilder: Images/Folge1.1.png, Folge1.2.png ...
+========================================================= */
+
+const MAX_EPISODES = 40;
+const MAX_GALLERY_IMAGES = 9;
+
+const SUPABASE_URL = "https://snvhmatohjzuobjtunje.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_pZ9qeXcHQXVM4Ts1DYN_YQ_rocH_PU0";
+
+const supabaseClient =
+  window.supabase?.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY) || null;
+
+/* ---------------------------------------------------------
+   Hilfsfunktionen
+--------------------------------------------------------- */
+
+async function fileExists(url) {
+  try {
+    const response = await fetch(url, {
+      method: "HEAD",
+      cache: "no-store"
+    });
+    return response.ok;
+  } catch (error) {
+    console.warn("Datei konnte nicht geprüft werden:", url, error);
+    return false;
+  }
+}
+
+async function discoverEpisodes() {
+  const found = [];
+
+  for (let n = 1; n <= MAX_EPISODES; n++) {
+    const mp3Url = `Folgen/Folge${n}.mp3`;
+    const mp4Url = `Folgen/Folge${n}.mp4`;
+    const coverUrl = `Images/Folge${n}.png`;
+
+    const [hasMp3, hasMp4] = await Promise.all([
+      fileExists(mp3Url),
+      fileExists(mp4Url)
+    ]);
+
+    if (!hasMp3 && !hasMp4) {
+      continue;
+    }
+
+    const hasCover = await fileExists(coverUrl);
+    const gallery = [];
+
+    for (let m = 1; m <= MAX_GALLERY_IMAGES; m++) {
+      const url = `Images/Folge${n}.${m}.png`;
+      if (await fileExists(url)) {
+        gallery.push(url);
+      }
+    }
+
+    found.push({
+      number: n,
+      mp3Url,
+      mp4Url,
+      hasMp3,
+      hasMp4,
+      coverUrl,
+      hasCover,
+      gallery
+    });
+  }
+
+  return found;
+}
+
+/* ---------------------------------------------------------
+   State
+--------------------------------------------------------- */
+
+let episodes = [];
+let loading = true;
+const formatChoice = {};
+const app = document.getElementById("app");
+
+/* ---------------------------------------------------------
+   Navigation / Rendering
+--------------------------------------------------------- */
+
+function render() {
+  app.innerHTML = "";
+  updateNavigation();
+
+  const hash = window.location.hash;
+
+  if (hash === "#witz") {
+    renderWitz();
+    return;
+  }
+
+  if (hash === "#infos") {
+    renderInfos();
+    return;
+  }
+
+  if (hash === "#ueber-uns") {
+    renderAbout();
+    return;
+  }
+
+  if (loading) {
+    renderLoading();
+    return;
+  }
+
+  if (episodes.length === 0) {
+    renderEmpty();
+    return;
+  }
+
+  const match = hash.match(/^#folge-(\d+)$/);
+
+  if (match) {
+    const ep = episodes.find(e => e.number === Number(match[1]));
+
+    if (ep) {
+      renderDetail(ep);
+      return;
+    }
+  }
+
+  renderList();
+}
+
+function updateNavigation() {
+  const hash = window.location.hash;
+
+  const page =
+    hash === "#witz" ? "witz" :
+    hash === "#infos" ? "infos" :
+    hash === "#ueber-uns" ? "ueber-uns" :
+    "folgen";
+
+  document.querySelectorAll(".nav-link").forEach(button => {
+    button.classList.toggle(
+      "active",
+      button.dataset.page === page
+    );
+  });
+}
+
+function renderLoading() {
+  const box = document.createElement("div");
+  box.className = "loading";
+
+  box.innerHTML = `
+    <div class="bars">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <p>Folgen werden gesucht …</p>
+  `;
+
+  app.appendChild(box);
+}
+
+function renderEmpty() {
+  const box = document.createElement("div");
+  box.className = "empty-state";
+
+  box.innerHTML = `
+    <div class="big">🎙️</div>
+    <p>
+      Keine Folgen gefunden.<br>
+      Prüfe bitte, ob deine Dateien im Ordner
+      <strong>Folgen</strong> liegen und z. B.
+      <strong>Folge1.mp3</strong> heißen.
+    </p>
+  `;
+
+  app.appendChild(box);
+}
+
+function renderWitz() {
+  const box = document.createElement("section");
+  box.className = "weekly-box";
+
+  box.innerHTML = `
+    <h2>Witz der Woche</h2>
+    <p>
+      Hier könnt ihr euren Witz der Woche einreichen.
+      Dieser Bereich kann später um eine eigene Einsende-Datenbank
+      und Moderation erweitert werden.
+    </p>
+    <p><strong>Mitmachaktion:</strong> Schickt uns euren besten Witz!</p>
+  `;
+
+  app.appendChild(box);
+}
+
+function renderInfos() {
+  const box = document.createElement("section");
+  box.className = "info-panel";
+
+  box.innerHTML = `
+    <h2>Infos</h2>
+    <p>
+      Hier kannst du Informationen zu eurem Podcast,
+      den Veröffentlichungen und weiteren Angeboten eintragen.
+    </p>
+    <p>
+      Jede Folge besitzt ihren eigenen Kommentarbereich.
+      Kommentare zu Folge 1 erscheinen nur bei Folge 1,
+      Kommentare zu Folge 2 nur bei Folge 2 usw.
+    </p>
+  `;
+
+  app.appendChild(box);
+}
+
+function renderAbout() {
+  const box = document.createElement("section");
+  box.className = "info-panel";
+
+  box.innerHTML = `
+    <h2>Über uns</h2>
+    <p>
+      Hier ist Platz für eure Vorstellung:
+      Wer steckt hinter dem Podcast, wie ist er entstanden
+      und worum geht es euch?
+    </p>
+  `;
+
+  app.appendChild(box);
+}
+
+/* ---------------------------------------------------------
+   Folgenliste
+--------------------------------------------------------- */
+
+function renderList() {
+  const title = document.createElement("h2");
+  title.className = "list-title";
+  title.textContent = "Alle Folgen";
+  app.appendChild(title);
+
+  const grid = document.createElement("div");
+  grid.className = "episode-grid";
+
+  episodes.forEach(ep => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "episode-card";
+    card.setAttribute("aria-label", `Folge ${ep.number} öffnen`);
+
+    if (ep.hasCover) {
+      const img = document.createElement("img");
+      img.className = "thumb";
+      img.src = ep.coverUrl;
+      img.alt = `Titelbild Folge ${ep.number}`;
+      img.loading = "lazy";
+      card.appendChild(img);
+    } else {
+      const fallback = document.createElement("div");
+      fallback.className = "thumb-fallback";
+      fallback.textContent = "🎧";
+      card.appendChild(fallback);
+    }
+
+    const body = document.createElement("div");
+    body.className = "card-body";
+
+    const tags = [];
+
+    if (ep.hasMp3) tags.push("🎧 Audio");
+    if (ep.hasMp4) tags.push("🎬 Video");
+
+    body.innerHTML = `
+      <p class="card-title">Folge ${ep.number}</p>
+      <p class="card-tags">
+        ${tags.map(tag => `<span>${tag}</span>`).join("")}
+      </p>
+    `;
+
+    card.appendChild(body);
+
+    card.addEventListener("click", () => {
+      window.location.hash = `#folge-${ep.number}`;
+    });
+
+    grid.appendChild(card);
+  });
+
+  app.appendChild(grid);
+}
+
+/* ---------------------------------------------------------
+   Folge – Detailseite
+--------------------------------------------------------- */
+
+function renderDetail(ep) {
+  const back = document.createElement("button");
+  back.type = "button";
+  back.className = "back-link";
+  back.textContent = "← Alle Folgen";
+
+  back.addEventListener("click", () => {
+    window.location.hash = "";
+  });
+
+  app.appendChild(back);
+
+  const title = document.createElement("h2");
+  title.className = "detail-title";
+  title.textContent = `Folge ${ep.number}`;
+  app.appendChild(title);
+
+  const bothAvailable = ep.hasMp3 && ep.hasMp4;
+  const chosen = formatChoice[ep.number];
+
+  if (bothAvailable && !chosen) {
+    renderChoice(ep);
+    return;
+  }
+
+  const mode = bothAvailable
+    ? chosen
+    : ep.hasMp3 ? "audio" : "video";
+
+  renderPlayer(ep, mode, bothAvailable);
+  renderComments(ep.number);
+}
+
+function renderChoice(ep) {
+  const box = document.createElement("div");
+  box.className = "choice-box";
+
+  box.innerHTML = `
+    <p>
+      Für diese Folge gibt es Audio und Video.
+      Wie möchtest du sie abspielen?
+    </p>
+  `;
+
+  const row = document.createElement("div");
+  row.className = "choice-row";
+
+  const audioButton = document.createElement("button");
+  audioButton.type = "button";
+  audioButton.className = "choice-btn";
+  audioButton.innerHTML = `<span class="icon">🎧</span>Audio`;
+
+  audioButton.addEventListener("click", () => {
+    formatChoice[ep.number] = "audio";
+    render();
+  });
+
+  const videoButton = document.createElement("button");
+  videoButton.type = "button";
+  videoButton.className = "choice-btn";
+  videoButton.innerHTML = `<span class="icon">🎬</span>Video`;
+
+  videoButton.addEventListener("click", () => {
+    formatChoice[ep.number] = "video";
+    render();
+  });
+
+  row.append(audioButton, videoButton);
+  box.appendChild(row);
+  app.appendChild(box);
+}
+
+function renderPlayer(ep, mode, bothAvailable) {
+  const box = document.createElement("div");
+  box.className = "player-box";
+
+  if (mode === "audio") {
+    if (ep.hasCover) {
+      const img = document.createElement("img");
+      img.className = "cover-img";
+      img.src = ep.coverUrl;
+      img.alt = `Titelbild Folge ${ep.number}`;
+      box.appendChild(img);
+    } else {
+      const fallback = document.createElement("div");
+      fallback.className = "cover-fallback";
+      fallback.textContent = "🎙️";
+      box.appendChild(fallback);
+    }
+
+    const audio = document.createElement("audio");
+    audio.controls = true;
+    audio.preload = "metadata";
+    audio.src = ep.mp3Url;
+    box.appendChild(audio);
+
+  } else {
+    const video = document.createElement("video");
+    video.controls = true;
+    video.preload = "metadata";
+    video.src = ep.mp4Url;
+    box.appendChild(video);
+  }
+
+  app.appendChild(box);
+
+  if (bothAvailable) {
+    const switchButton = document.createElement("button");
+    switchButton.type = "button";
+    switchButton.className = "switch-format";
+    switchButton.textContent = "Format wechseln";
+
+    switchButton.addEventListener("click", () => {
+      delete formatChoice[ep.number];
+      render();
+    });
+
+    app.appendChild(switchButton);
+  }
+
+  if (ep.gallery.length > 0) {
+    const galleryTitle = document.createElement("p");
+    galleryTitle.className = "gallery-title";
+    galleryTitle.textContent = "Weitere Fotos";
+    app.appendChild(galleryTitle);
+
+    const grid = document.createElement("div");
+    grid.className = "gallery-grid";
+
+    ep.gallery.forEach(url => {
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = `Foto zu Folge ${ep.number}`;
+      img.loading = "lazy";
+
+      img.addEventListener("click", () => {
+        openLightbox(url);
+      });
+
+      grid.appendChild(img);
+    });
+
+    app.appendChild(grid);
+  }
+}
+
+/* ---------------------------------------------------------
+   Kommentare / Supabase
+--------------------------------------------------------- */
+
+function renderComments(episodeNumber) {
+  const section = document.createElement("section");
+  section.className = "comment-section";
+
+  const title = document.createElement("h3");
+  title.textContent = `Kommentare zu Folge ${episodeNumber}`;
+  section.appendChild(title);
+
+  const form = document.createElement("form");
+  form.className = "comment-form";
+
+  const nameLabel = document.createElement("label");
+  nameLabel.textContent = "Name";
+  nameLabel.htmlFor = `comment-name-${episodeNumber}`;
+
+  const nameInput = document.createElement("input");
+  nameInput.id = `comment-name-${episodeNumber}`;
+  nameInput.type = "text";
+  nameInput.maxLength = 50;
+  nameInput.required = true;
+  nameInput.placeholder = "Dein Name";
+
+  const textLabel = document.createElement("label");
+  textLabel.textContent = "Kommentar";
+  textLabel.htmlFor = `comment-text-${episodeNumber}`;
+
+  const textInput = document.createElement("textarea");
+  textInput.id = `comment-text-${episodeNumber}`;
+  textInput.maxLength = 2000;
+  textInput.required = true;
+  textInput.placeholder = "Was möchtest du zu dieser Folge sagen?";
+
+  const count = document.createElement("div");
+  count.className = "char-count";
+  count.textContent = "0 / 2000";
+
+  textInput.addEventListener("input", () => {
+    count.textContent = `${textInput.value.length} / 2000`;
+  });
+
+  const submit = document.createElement("button");
+  submit.type = "submit";
+  submit.className = "comment-submit";
+  submit.textContent = "Kommentar veröffentlichen";
+
+  const status = document.createElement("div");
+  status.className = "comment-status";
+  status.setAttribute("aria-live", "polite");
+
+  form.append(
+    nameLabel,
+    nameInput,
+    textLabel,
+    textInput,
+    count,
+    submit,
+    status
+  );
+
+  const list = document.createElement("div");
+  list.className = "comments-list";
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (!supabaseClient) {
+      status.className = "comment-status error";
+      status.textContent =
+        "Supabase ist nicht erreichbar bzw. nicht eingerichtet.";
+      return;
+    }
+
+    const name = nameInput.value.trim();
+    const content = textInput.value.trim();
+
+    if (name.length < 1 || name.length > 50) {
+      status.className = "comment-status error";
+      status.textContent =
+        "Der Name muss zwischen 1 und 50 Zeichen lang sein.";
+      return;
+    }
+
+    if (content.length < 1 || content.length > 2000) {
+      status.className = "comment-status error";
+      status.textContent =
+        "Der Kommentar muss zwischen 1 und 2000 Zeichen lang sein.";
+      return;
+    }
+
+    submit.disabled = true;
+    submit.textContent = "Wird veröffentlicht …";
+    status.textContent = "";
+
+    try {
+      const { error } = await supabaseClient
+        .from("comments")
+        .insert({
+          episode_id: episodeNumber,
+          name,
+          content
+        });
+
+      if (error) {
+        console.error(error);
+        status.className = "comment-status error";
+        status.textContent =
+          "Der Kommentar konnte nicht gespeichert werden.";
+        return;
+      }
+
+      form.reset();
+      count.textContent = "0 / 2000";
+      status.className = "comment-status success";
+      status.textContent = "Kommentar erfolgreich veröffentlicht.";
+
+      await loadCommentsInto(list, episodeNumber);
+
+    } catch (error) {
+      console.error(error);
+      status.className = "comment-status error";
+      status.textContent =
+        "Beim Speichern ist ein Fehler aufgetreten.";
+
+    } finally {
+      submit.disabled = false;
+      submit.textContent = "Kommentar veröffentlichen";
+    }
+  });
+
+  section.append(form, list);
+  app.appendChild(section);
+
+  loadCommentsInto(list, episodeNumber);
+}
+
+async function loadCommentsInto(container, episodeNumber) {
+  container.textContent = "Kommentare werden geladen …";
+
+  if (!supabaseClient) {
+    container.innerHTML =
+      '<p class="comment-empty">Kommentare sind momentan nicht verfügbar.</p>';
+    return;
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("comments")
+      .select("id, name, content, created_at")
+      .eq("episode_id", episodeNumber)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error(error);
+      container.innerHTML =
+        '<p class="comment-empty">Die Kommentare konnten nicht geladen werden.</p>';
+      return;
+    }
+
+    container.innerHTML = "";
+
+    if (!data || data.length === 0) {
+      container.innerHTML =
+        '<p class="comment-empty">Noch keine Kommentare zu dieser Folge. Sei der Erste!</p>';
+      return;
+    }
+
+    data.forEach(comment => {
+      const card = document.createElement("article");
+      card.className = "comment-card";
+
+      const meta = document.createElement("div");
+      meta.className = "comment-meta";
+
+      const name = document.createElement("div");
+      name.className = "comment-name";
+      name.textContent = comment.name;
+
+      const date = document.createElement("div");
+      date.className = "comment-date";
+      date.textContent = formatCommentDate(comment.created_at);
+
+      const content = document.createElement("div");
+      content.className = "comment-text";
+      content.textContent = comment.content;
+
+      meta.append(name, date);
+      card.append(meta, content);
+      container.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error(error);
+    container.innerHTML =
+      '<p class="comment-empty">Die Kommentare konnten nicht geladen werden.</p>';
+  }
+}
+
+function formatCommentDate(dateString) {
+  return new Date(dateString).toLocaleString("de-DE", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  });
+}
+
+/* ---------------------------------------------------------
+   Lightbox
+--------------------------------------------------------- */
+
+function openLightbox(url) {
+  const overlay = document.createElement("div");
+  overlay.className = "lightbox";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-label", "Bildansicht");
+
+  const img = document.createElement("img");
+  img.src = url;
+  img.alt = "Vergrößerte Ansicht";
+
+  overlay.appendChild(img);
+
+  overlay.addEventListener("click", () => {
+    overlay.remove();
+  });
+
+  document.body.appendChild(overlay);
+}
+
+/* ---------------------------------------------------------
+   Navigation starten
+--------------------------------------------------------- */
+
+document.querySelectorAll(".nav-link").forEach(button => {
+  button.addEventListener("click", () => {
+    const page = button.dataset.page;
+    window.location.hash = page === "folgen" ? "" : `#${page}`;
+  });
+});
+
+window.addEventListener("hashchange", render);
+
+/* ---------------------------------------------------------
+   App starten
+--------------------------------------------------------- */
+
+(async function init() {
+  render();
+
+  try {
+    episodes = await discoverEpisodes();
+  } catch (error) {
+    console.error("Fehler beim Suchen der Folgen:", error);
+    episodes = [];
+  }
+
+  loading = false;
+  render();
+})();
+</script>
+</body>
+</html>
