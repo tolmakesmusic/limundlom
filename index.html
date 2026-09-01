@@ -1,1248 +1,553 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spielshow – Punktetafel</title>
+    <meta charset="UTF-8">
 
-<style>
-  :root{
-    --bg:#0b1020; --panel:#151c32; --panel2:#1d2743; --text:#f7f8ff;
-    --muted:#aab3cc; --accent:#6c63ff; --accent2:#00d4ff; --gold:#ffd166;
-    --green:#35d07f; --red:#ff5c7a; --line:rgba(255,255,255,.1);
-  }
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-  *{box-sizing:border-box}
+    <title>Meine Seite</title>
 
-  body{
-    margin:0;
-    min-height:100vh;
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-    background:radial-gradient(circle at top,#202a52 0,#0b1020 45%,#070b16 100%);
-    color:var(--text);
-  }
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
-  .wrap{
-    max-width:1180px;
-    margin:auto;
-    padding:24px;
-  }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            color: #222;
+        }
 
-  header{
-    text-align:center;
-    margin-bottom:24px;
-  }
+        main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
 
-  h1{
-    font-size:clamp(2rem,5vw,4rem);
-    margin:.2em 0;
-    font-weight:900;
-    letter-spacing:-.04em;
-  }
+        h1 {
+            margin-bottom: 10px;
+        }
 
-  .subtitle{
-    color:var(--muted);
-    font-size:1.05rem;
-  }
+        .intro {
+            margin-bottom: 40px;
+        }
 
-  .setup,.game{
-    background:rgba(21,28,50,.9);
-    border:1px solid var(--line);
-    border-radius:24px;
-    padding:22px;
-    box-shadow:0 18px 60px rgba(0,0,0,.28);
-  }
+        .comment-form {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 40px;
+        }
 
-  .setup-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:18px;
-  }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
 
-  .team-card{
-    background:var(--panel2);
-    border-radius:20px;
-    padding:20px;
-  }
+        input,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font: inherit;
+            margin-bottom: 18px;
+        }
 
-  .team-card h2{
-    margin-top:0;
-  }
+        textarea {
+            min-height: 130px;
+            resize: vertical;
+        }
 
-  label{
-    display:block;
-    color:var(--muted);
-    font-size:.9rem;
-    margin:12px 0 6px;
-  }
+        button {
+            background: #222;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 16px;
+        }
 
-  input[type=text]{
-    width:100%;
-    padding:13px 14px;
-    border:1px solid var(--line);
-    border-radius:12px;
-    background:#0f1528;
-    color:white;
-    font-size:1rem;
-    outline:none;
-  }
+        button:hover {
+            background: #444;
+        }
 
-  input[type=text]:focus{
-    border-color:var(--accent);
-  }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
 
-  .photo-row{
-    display:flex;
-    gap:14px;
-    align-items:center;
-  }
+        .status {
+            margin-top: 15px;
+        }
 
-  .photo{
-    width:82px;
-    height:82px;
-    border-radius:50%;
-    object-fit:cover;
-    background:#0f1528;
-    border:2px solid var(--line);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:var(--muted);
-    font-size:2rem;
-    overflow:hidden;
-    flex:none;
-  }
+        .error {
+            color: #b00020;
+        }
 
-  input[type=file]{
-    width:100%;
-    color:var(--muted);
-  }
+        .success {
+            color: #087f23;
+        }
 
-  button{
-    border:0;
-    border-radius:13px;
-    padding:13px 17px;
-    font-weight:800;
-    font-size:.95rem;
-    cursor:pointer;
-    background:var(--accent);
-    color:white;
-    transition:.15s transform,.15s opacity;
-  }
+        .comment {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+        }
 
-  button:hover{
-    transform:translateY(-1px);
-    opacity:.93;
-  }
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
 
-  button.secondary{
-    background:#2b3553;
-  }
+        .comment-name {
+            font-weight: bold;
+        }
 
-  button.danger{
-    background:#a8324d;
-  }
+        .comment-date {
+            color: #777;
+            font-size: 14px;
+        }
 
-  /* Neuer Schnellstart-Button */
-  button.preset{
-    background:linear-gradient(135deg,#6c63ff,#00a8cc);
-    box-shadow:0 8px 25px rgba(108,99,255,.25);
-  }
+        .comment-content {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
 
-  .actions{
-    display:flex;
-    flex-wrap:wrap;
-    gap:10px;
-    margin-top:18px;
-  }
-
-  /*
-    FIXIERTER HEADER MIT PUNKTESAND
-    Der Punktestand bleibt beim Scrollen immer sichtbar.
-  */
-  .scoreboard-wrap{
-    position:sticky;
-    top:0;
-    z-index:100;
-    margin:0 -24px 18px;
-    padding:14px 24px 16px;
-    background:rgba(11,16,32,.96);
-    backdrop-filter:blur(14px);
-    -webkit-backdrop-filter:blur(14px);
-    border-bottom:1px solid var(--line);
-    box-shadow:0 8px 25px rgba(0,0,0,.2);
-  }
-
-  .scoreboard{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:18px;
-  }
-
-  .score{
-    min-height:155px;
-    padding:16px;
-    border-radius:22px;
-    background:var(--panel2);
-    position:relative;
-    overflow:hidden;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:18px;
-    transition:.25s;
-  }
-
-  .score.winner{
-    outline:3px solid var(--gold);
-    box-shadow:0 0 28px rgba(255,209,102,.22);
-  }
-
-  .score.winner .score-name,
-  .score.winner .points,
-  .score.winner .points-label{
-    color:var(--gold);
-  }
-
-  .score-info{
-    flex:1;
-    text-align:center;
-  }
-
-  .score-name{
-    font-size:clamp(1.15rem,2.5vw,1.7rem);
-    font-weight:900;
-  }
-
-  .points{
-    font-size:clamp(2.8rem,6vw,4.8rem);
-    line-height:1;
-    font-weight:950;
-    margin-top:5px;
-    text-align:center;
-  }
-
-  .points-label{
-    color:var(--muted);
-    text-align:center;
-  }
-
-  .score-photo{
-    width:82px;
-    height:82px;
-    border-radius:50%;
-    object-fit:cover;
-    border:3px solid rgba(255,255,255,.15);
-    background:#0f1528;
-  }
-
-  .moderation{
-    margin-bottom:20px;
-    padding:20px;
-    border-radius:20px;
-    background:linear-gradient(
-      135deg,
-      rgba(255,209,102,.13),
-      rgba(108,99,255,.12)
-    );
-    border:1px solid rgba(255,209,102,.22);
-  }
-
-  .moderation h2{
-    margin:0 0 12px;
-  }
-
-  .moderation-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-  }
-
-  .mod-card{
-    background:rgba(11,16,32,.55);
-    border-radius:15px;
-    padding:14px;
-    text-align:center;
-  }
-
-  .mod-name{
-    font-weight:900;
-  }
-
-  .mod-value{
-    font-size:1.65rem;
-    font-weight:950;
-    color:var(--gold);
-    margin-top:4px;
-  }
-
-  .mod-note{
-    font-size:.82rem;
-    color:var(--muted);
-    margin-top:3px;
-  }
-
-  .remaining{
-    text-align:center;
-    padding:18px;
-    border-radius:18px;
-    background:linear-gradient(
-      135deg,
-      rgba(108,99,255,.25),
-      rgba(0,212,255,.12)
-    );
-    margin-bottom:20px;
-  }
-
-  .remaining strong{
-    font-size:2rem;
-    color:var(--gold);
-  }
-
-  .games{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-    gap:14px;
-  }
-
-  .game-card{
-    background:var(--panel2);
-    border:1px solid var(--line);
-    border-radius:18px;
-    padding:16px;
-  }
-
-  .game-card.played{
-    opacity:.72;
-  }
-
-  .game-top{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-  }
-
-  .game-title{
-    font-weight:900;
-    font-size:1.1rem;
-  }
-
-  .badge{
-    background:var(--gold);
-    color:#241b00;
-    border-radius:999px;
-    padding:5px 10px;
-    font-weight:900;
-    white-space:nowrap;
-  }
-
-  .winner-text{
-    color:var(--green);
-    font-weight:800;
-    margin:10px 0;
-  }
-
-  .game-buttons{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px;
-    margin-top:12px;
-  }
-
-  .game-buttons button{
-    background:#34405f;
-  }
-
-  .game-buttons button.selected{
-    background:var(--green);
-    color:#07150d;
-  }
-
-  .game-buttons button.draw{
-    grid-column:1/-1;
-    background:#4b5572;
-  }
-
-  .progress{
-    height:10px;
-    background:#0b1020;
-    border-radius:99px;
-    overflow:hidden;
-    margin-top:15px;
-  }
-
-  .progress-bar{
-    height:100%;
-    background:linear-gradient(90deg,var(--accent),var(--accent2));
-    transition:width .3s;
-  }
-
-  .hidden{
-    display:none;
-  }
-
-  .note{
-    font-size:.85rem;
-    color:var(--muted);
-    margin-top:10px;
-  }
-
-  @media(max-width:700px){
-    .setup-grid,
-    .scoreboard,
-    .moderation-grid{
-      grid-template-columns:1fr;
-    }
-
-    .wrap{
-      padding:14px;
-    }
-
-    .scoreboard-wrap{
-      margin:0 -14px 18px;
-      padding-left:14px;
-      padding-right:14px;
-    }
-
-    .score{
-      min-height:130px;
-    }
-
-    .score-photo{
-      width:62px;
-      height:62px;
-    }
-  }
-</style>
+        .empty {
+            color: #666;
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="wrap">
+<main>
 
-  <section id="setup" class="setup">
+    <h1>Meine Webseite</h1>
 
-    <h2>Teams einrichten</h2>
+    <div class="intro">
+        <p>
+            Willkommen auf meiner Seite!
+        </p>
 
-    <div class="setup-grid">
-
-      <div class="team-card">
-        <h2>Team 1</h2>
-
-        <label for="name1">Name</label>
-        <input id="name1" type="text" placeholder="z. B. Team Blau">
-
-        <label>Foto</label>
-
-        <div class="photo-row">
-          <div class="photo" id="preview1">👤</div>
-          <input id="photo1" type="file" accept="image/*">
-        </div>
-      </div>
-
-
-      <div class="team-card">
-        <h2>Team 2</h2>
-
-        <label for="name2">Name</label>
-        <input id="name2" type="text" placeholder="z. B. Team Rot">
-
-        <label>Foto</label>
-
-        <div class="photo-row">
-          <div class="photo" id="preview2">👤</div>
-          <input id="photo2" type="file" accept="image/*">
-        </div>
-      </div>
-
+        <p>
+            Hinterlasse gerne einen Kommentar.
+        </p>
     </div>
 
 
-    <div class="actions">
+    <!-- Kommentarformular -->
 
-      <!-- NEUER BUTTON -->
-      <button id="presetBtn" class="preset">
-        ⚡ Baddies &amp; Gestiefelte Muskelkater
-      </button>
+    <section class="comment-form">
 
-      <button id="startBtn">
-        Punktetafel starten
-      </button>
+        <h2>Kommentar schreiben</h2>
 
-    </div>
+        <form id="comment-form">
 
-    <div class="note">
-      Der Schnellstart verwendet automatisch die Dateien
-      <strong>images/die-baddies.png</strong> und
-      <strong>images/die-gestiefelten-muskelkater.png</strong>.
-    </div>
+            <label for="name">
+                Name
+            </label>
 
-  </section>
+            <input
+                id="name"
+                type="text"
+                maxlength="50"
+                required
+                placeholder="Dein Name"
+            >
 
 
-  <section id="board" class="hidden">
+            <label for="content">
+                Kommentar
+            </label>
 
-    <!--
-      FIXIERTER PUNKTESAND IM HEADER
-    -->
-    <header class="scoreboard-wrap">
+            <textarea
+                id="content"
+                maxlength="2000"
+                required
+                placeholder="Dein Kommentar..."
+            ></textarea>
 
-      <div class="scoreboard">
 
-        <div class="score" id="scoreCard1">
-
-          <img
-            id="boardPhoto1"
-            class="score-photo"
-            alt=""
-          >
-
-          <div class="score-info">
+            <button
+                id="submit-button"
+                type="submit"
+            >
+                Kommentar veröffentlichen
+            </button>
 
             <div
-              class="score-name"
-              id="boardName1"
-            >
-              Team 1
-            </div>
+                id="status"
+                class="status"
+                aria-live="polite"
+            ></div>
 
-            <div
-              class="points"
-              id="points1"
-            >
-              0
-            </div>
+        </form>
 
-            <div class="points-label">
-              Punkte
-            </div>
-
-          </div>
-
-        </div>
+    </section>
 
 
-        <div class="score" id="scoreCard2">
+    <!-- Kommentare -->
 
-          <img
-            id="boardPhoto2"
-            class="score-photo"
-            alt=""
-          >
+    <section>
 
-          <div class="score-info">
-
-            <div
-              class="score-name"
-              id="boardName2"
-            >
-              Team 2
-            </div>
-
-            <div
-              class="points"
-              id="points2"
-            >
-              0
-            </div>
-
-            <div class="points-label">
-              Punkte
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </header>
-
-
-    <div class="moderation">
-
-      <h2>🎙️ Moderation</h2>
-
-      <div class="moderation-grid">
-
-        <div class="mod-card">
-
-          <div
-            class="mod-name"
-            id="modName1"
-          >
-            Team 1
-          </div>
-
-          <div
-            class="mod-value"
-            id="modValue1"
-          >
-            –
-          </div>
-
-          <div
-            class="mod-note"
-            id="modNote1"
-          >
-            Noch nicht uneinholbar
-          </div>
-
-        </div>
-
-
-        <div class="mod-card">
-
-          <div
-            class="mod-name"
-            id="modName2"
-          >
-            Team 2
-          </div>
-
-          <div
-            class="mod-value"
-            id="modValue2"
-          >
-            –
-          </div>
-
-          <div
-            class="mod-note"
-            id="modNote2"
-          >
-            Noch nicht uneinholbar
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <div class="remaining">
-
-      <div>
-        Noch zu spielen / zu vergeben
-      </div>
-
-      <strong id="remainingPoints">
-        66 Punkte
-      </strong>
-
-      <div id="progressText">
-        0 von 11 Spielen gespielt
-      </div>
-
-      <div class="progress">
-        <div
-          class="progress-bar"
-          id="progressBar"
-          style="width:0%"
-        ></div>
-      </div>
-
-    </div>
-
-
-    <div class="game">
-
-      <div style="
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        gap:12px;
-        flex-wrap:wrap
-      ">
-
-        <h2 style="margin:0">
-          Spiele
+        <h2>
+            Kommentare
         </h2>
 
-        <div class="actions" style="margin:0">
-
-          <button
-            class="secondary"
-            id="backBtn"
-          >
-            Teams ändern
-          </button>
-
+        <div id="comments">
+            Kommentare werden geladen...
         </div>
 
-      </div>
+    </section>
+
+</main>
 
 
-      <div
-        class="games"
-        id="games"
-      ></div>
-
-    </div>
-
-  </section>
-
-</div>
+<!-- Supabase JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 
 <script>
-(() => {
 
-  const totalGames = 11;
-  const totalPoints = 66;
+    /*
+     * =====================================================
+     * SUPABASE KONFIGURATION
+     * =====================================================
+     *
+     * Diese beiden Werte musst du ersetzen.
+     */
 
-  const state = {
-    names: ["Team 1", "Team 2"],
+    const SUPABASE_URL =
+        "DEINE_SUPABASE_URL";
 
-    photos: ["", ""],
-
-    results: Array(totalGames).fill(null)
-  };
-
-
-  const $ = id => document.getElementById(id);
-
-
-  /*
-    FESTE DATEIEN FÜR DEN SCHNELLSTART
-
-    Die Dateien müssen im Ordner "images" liegen:
-      images/die-baddies.png
-      images/die-gestiefelten-muskelkater.png
-  */
-  const presetTeams = {
-    names: [
-      "Die Baddies",
-      "Die Gestiefelten Muskelkater"
-    ],
-
-    photos: [
-      "images/die-baddies.png",
-      "images/die-gestiefelten-muskelkater.png"
-    ]
-  };
+    const SUPABASE_PUBLISHABLE_KEY =
+        "DEIN_SUPABASE_PUBLISHABLE_KEY";
 
 
-  function readPhoto(input, preview, index) {
-
-    input.addEventListener("change", () => {
-
-      const file = input.files[0];
-
-      if (!file) return;
-
-      const reader = new FileReader();
-
-      reader.onload = e => {
-
-        state.photos[index] = e.target.result;
-
-        preview.innerHTML = `
-          <img
-            src="${e.target.result}"
-            alt=""
-            style="
-              width:100%;
-              height:100%;
-              object-fit:cover
-            "
-          >
-        `;
-      };
-
-      reader.readAsDataURL(file);
-    });
-  }
+    const supabaseClient =
+        window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_PUBLISHABLE_KEY
+        );
 
 
-  readPhoto(
-    $("photo1"),
-    $("preview1"),
-    0
-  );
+    /*
+     * =====================================================
+     * HTML ELEMENTE
+     * =====================================================
+     */
 
-  readPhoto(
-    $("photo2"),
-    $("preview2"),
-    1
-  );
+    const form =
+        document.getElementById("comment-form");
 
+    const nameInput =
+        document.getElementById("name");
 
-  /*
-    NEU:
-    Schnellstart für "Die Baddies" und
-    "Die Gestiefelten Muskelkater".
-  */
-  $("presetBtn").addEventListener("click", () => {
+    const contentInput =
+        document.getElementById("content");
 
-    state.names[0] = presetTeams.names[0];
-    state.names[1] = presetTeams.names[1];
+    const submitButton =
+        document.getElementById("submit-button");
 
-    state.photos[0] = presetTeams.photos[0];
-    state.photos[1] = presetTeams.photos[1];
+    const status =
+        document.getElementById("status");
 
-    $("name1").value = state.names[0];
-    $("name2").value = state.names[1];
-
-    $("preview1").innerHTML = `
-      <img
-        src="${state.photos[0]}"
-        alt="${state.names[0]}"
-        style="
-          width:100%;
-          height:100%;
-          object-fit:cover
-        "
-      >
-    `;
-
-    $("preview2").innerHTML = `
-      <img
-        src="${state.photos[1]}"
-        alt="${state.names[1]}"
-        style="
-          width:100%;
-          height:100%;
-          object-fit:cover
-        "
-      >
-    `;
-
-  });
+    const commentsContainer =
+        document.getElementById("comments");
 
 
-  function renderGames() {
+    /*
+     * =====================================================
+     * KOMMENTARE LADEN
+     * =====================================================
+     */
 
-    $("games").innerHTML = "";
+    async function loadComments() {
 
-    state.results.forEach((result, i) => {
-
-      const value = i + 1;
-
-      const card = document.createElement("div");
-
-      card.className =
-        "game-card" +
-        (result !== null ? " played" : "");
+        commentsContainer.textContent =
+            "Kommentare werden geladen...";
 
 
-      const winner =
-        result === 0
-          ? state.names[0]
-          : result === 1
-            ? state.names[1]
-            : result === 2
-              ? "Unentschieden"
-              : "";
+        const { data, error } =
+            await supabaseClient
+                .from("comments")
+                .select("id, name, content, created_at")
+                .order("created_at", {
+                    ascending: false
+                });
 
 
-      card.innerHTML = `
+        if (error) {
 
-        <div class="game-top">
+            console.error(error);
 
-          <div class="game-title">
-            Spiel ${value}
-          </div>
+            commentsContainer.innerHTML =
+                '<p class="error">' +
+                'Die Kommentare konnten nicht geladen werden.' +
+                '</p>';
 
-          <div class="badge">
-            ${value}
-            ${value === 1 ? "Punkt" : "Punkte"}
-          </div>
-
-        </div>
-
-
-        ${
-          winner
-            ? `<div class="winner-text">
-                ✓ ${winner}
-              </div>`
-            : `<div class="note">
-                Noch offen
-              </div>`
+            return;
         }
 
 
-        <div class="game-buttons">
+        if (!data || data.length === 0) {
 
-          <button
-            data-game="${i}"
-            data-team="0"
-            class="${result === 0 ? "selected" : ""}"
-          >
-            ${escapeHtml(state.names[0])}
-          </button>
+            commentsContainer.innerHTML =
+                '<p class="empty">' +
+                'Noch keine Kommentare vorhanden.' +
+                '</p>';
 
-
-          <button
-            data-game="${i}"
-            data-team="1"
-            class="${result === 1 ? "selected" : ""}"
-          >
-            ${escapeHtml(state.names[1])}
-          </button>
+            return;
+        }
 
 
-          <button
-            class="draw ${result === 2 ? "selected" : ""}"
-            data-game="${i}"
-            data-team="2"
-          >
-            Unentschieden / niemand
-          </button>
-
-        </div>
-      `;
+        commentsContainer.innerHTML = "";
 
 
-      $("games").appendChild(card);
+        data.forEach(comment => {
 
-    });
+            const article =
+                document.createElement("article");
+
+            article.className = "comment";
 
 
-    $("games")
-      .querySelectorAll("button[data-game]")
-      .forEach(btn => {
+            const header =
+                document.createElement("div");
 
-        btn.addEventListener("click", () => {
+            header.className =
+                "comment-header";
 
-          const i =
-            Number(btn.dataset.game);
 
-          const team =
-            Number(btn.dataset.team);
+            const name =
+                document.createElement("div");
 
-          state.results[i] =
-            state.results[i] === team
-              ? null
-              : team;
+            name.className =
+                "comment-name";
 
-          render();
+            /*
+             * textContent statt innerHTML:
+             * Dadurch wird HTML im Kommentar
+             * nicht ausgeführt.
+             */
+
+            name.textContent =
+                comment.name;
+
+
+            const date =
+                document.createElement("div");
+
+            date.className =
+                "comment-date";
+
+            date.textContent =
+                formatDate(comment.created_at);
+
+
+            const content =
+                document.createElement("div");
+
+            content.className =
+                "comment-content";
+
+            content.textContent =
+                comment.content;
+
+
+            header.appendChild(name);
+            header.appendChild(date);
+
+            article.appendChild(header);
+            article.appendChild(content);
+
+            commentsContainer.appendChild(article);
 
         });
 
-      });
-
-  }
-
-
-  function render() {
-
-    $("boardName1").textContent =
-      state.names[0];
-
-    $("boardName2").textContent =
-      state.names[1];
-
-
-    $("points1").textContent =
-      score(0);
-
-    $("points2").textContent =
-      score(1);
-
-
-    const playedPoints =
-      state.results.reduce(
-        (sum, r, i) =>
-          r !== null
-            ? sum + i + 1
-            : sum,
-        0
-      );
-
-
-    const remaining =
-      totalPoints - playedPoints;
-
-
-    const playedGames =
-      state.results.filter(
-        r => r !== null
-      ).length;
-
-
-    $("remainingPoints").textContent =
-      `${remaining} ${
-        remaining === 1
-          ? "Punkt"
-          : "Punkte"
-      }`;
-
-
-    $("progressText").textContent =
-      `${playedGames} von ${totalGames} Spielen gespielt`;
-
-
-    $("progressBar").style.width =
-      `${playedPoints / totalPoints * 100}%`;
-
-
-    setPhoto(
-      $("boardPhoto1"),
-      state.photos[0]
-    );
-
-    setPhoto(
-      $("boardPhoto2"),
-      state.photos[1]
-    );
-
-
-    const s1 = score(0);
-    const s2 = score(1);
-
-
-    const winner1 =
-      playedGames > 0 &&
-      s1 > s2 &&
-      (s1 - s2) > remaining;
-
-
-    const winner2 =
-      playedGames > 0 &&
-      s2 > s1 &&
-      (s2 - s1) > remaining;
-
-
-    $("scoreCard1")
-      .classList.toggle(
-        "winner",
-        winner1
-      );
-
-
-    $("scoreCard2")
-      .classList.toggle(
-        "winner",
-        winner2
-      );
-
-
-    $("modName1").textContent =
-      state.names[0];
-
-    $("modName2").textContent =
-      state.names[1];
-
-
-    updateModeration(
-      0,
-      s1,
-      s2,
-      remaining,
-      winner1
-    );
-
-
-    updateModeration(
-      1,
-      s2,
-      s1,
-      remaining,
-      winner2
-    );
-
-
-    renderGames();
-
-  }
-
-
-  function updateModeration(
-    team,
-    own,
-    opponent,
-    remaining,
-    lockedWinner
-  ) {
-
-    const valueEl =
-      $("modValue" + (team + 1));
-
-    const noteEl =
-      $("modNote" + (team + 1));
-
-
-    if (lockedWinner) {
-
-      valueEl.textContent =
-        "GEWONNEN 🏆";
-
-      noteEl.textContent =
-        "Mehr als die Hälfte der noch möglichen Punkte";
-
-      return;
     }
 
 
-    if (remaining === 0) {
+    /*
+     * =====================================================
+     * DATUM FORMATIEREN
+     * =====================================================
+     */
 
-      valueEl.textContent =
-        own === opponent
-          ? "GLEICHSTAND"
-          : (
-              own > opponent
-                ? "GEWONNEN 🏆"
-                : "VERLOREN"
-            );
+    function formatDate(dateString) {
 
-      noteEl.textContent =
-        "Alle Spiele sind gespielt";
+        const date =
+            new Date(dateString);
 
-      return;
-    }
-
-
-    const majority =
-      Math.floor(remaining / 2) + 1;
-
-
-    const need =
-      Math.max(
-        0,
-        majority - own
-      );
-
-
-    if (need <= 0) {
-
-      valueEl.textContent =
-        "0 Punkte";
-
-      noteEl.textContent =
-        "Bereits uneinholbar";
-
-    } else {
-
-      valueEl.textContent =
-        need +
-        (
-          need === 1
-            ? " Punkt"
-            : " Punkte"
+        return date.toLocaleString(
+            "de-DE",
+            {
+                dateStyle: "medium",
+                timeStyle: "short"
+            }
         );
 
-      noteEl.textContent =
-        "Noch nötig für mehr als die Hälfte";
     }
 
-  }
+
+    /*
+     * =====================================================
+     * KOMMENTAR ABSENDEN
+     * =====================================================
+     */
+
+    form.addEventListener(
+        "submit",
+        async function(event) {
+
+            event.preventDefault();
 
 
-  function score(team) {
+            const name =
+                nameInput.value.trim();
 
-    return state.results.reduce(
-      (sum, r, i) =>
-        r === team
-          ? sum + i + 1
-          : sum,
-      0
+            const content =
+                contentInput.value.trim();
+
+
+            /*
+             * Zusätzliche Prüfung im Browser
+             */
+
+            if (
+                name.length < 1 ||
+                name.length > 50
+            ) {
+
+                showStatus(
+                    "Der Name muss zwischen 1 und 50 Zeichen lang sein.",
+                    true
+                );
+
+                return;
+            }
+
+
+            if (
+                content.length < 1 ||
+                content.length > 2000
+            ) {
+
+                showStatus(
+                    "Der Kommentar muss zwischen 1 und 2000 Zeichen lang sein.",
+                    true
+                );
+
+                return;
+            }
+
+
+            /*
+             * Button deaktivieren,
+             * damit nicht mehrfach geklickt wird.
+             */
+
+            submitButton.disabled = true;
+
+            submitButton.textContent =
+                "Wird veröffentlicht...";
+
+
+            const { error } =
+                await supabaseClient
+                    .from("comments")
+                    .insert({
+                        name: name,
+                        content: content
+                    });
+
+
+            if (error) {
+
+                console.error(error);
+
+                showStatus(
+                    "Der Kommentar konnte nicht gespeichert werden.",
+                    true
+                );
+
+                submitButton.disabled = false;
+
+                submitButton.textContent =
+                    "Kommentar veröffentlichen";
+
+                return;
+            }
+
+
+            /*
+             * Formular zurücksetzen
+             */
+
+            form.reset();
+
+
+            showStatus(
+                "Kommentar erfolgreich veröffentlicht.",
+                false
+            );
+
+
+            submitButton.disabled = false;
+
+            submitButton.textContent =
+                "Kommentar veröffentlichen";
+
+
+            /*
+             * Kommentare neu laden
+             */
+
+            await loadComments();
+
+        }
     );
 
-  }
 
+    /*
+     * =====================================================
+     * STATUSMELDUNG
+     * =====================================================
+     */
 
-  function setPhoto(img, src) {
+    function showStatus(message, isError) {
 
-    if (src) {
+        status.textContent =
+            message;
 
-      img.src = src;
-
-      img.style.visibility =
-        "visible";
-
-    } else {
-
-      img.removeAttribute("src");
-
-      img.style.visibility =
-        "hidden";
-    }
-
-  }
-
-
-  function escapeHtml(s) {
-
-    return String(s).replace(
-      /[&<>"']/g,
-      c => ({
-        "&":"&amp;",
-        "<":"&lt;",
-        ">":"&gt;",
-        '"':"&quot;",
-        "'":"&#039;"
-      }[c])
-    );
-
-  }
-
-
-  $("startBtn").addEventListener(
-    "click",
-    () => {
-
-      state.names[0] =
-        $("name1").value.trim() ||
-        "Team 1";
-
-
-      state.names[1] =
-        $("name2").value.trim() ||
-        "Team 2";
-
-
-      $("setup")
-        .classList.add("hidden");
-
-
-      $("board")
-        .classList.remove("hidden");
-
-
-      render();
-
-
-      window.scrollTo({
-        top:0,
-        behavior:"smooth"
-      });
+        status.className =
+            "status " +
+            (isError ? "error" : "success");
 
     }
-  );
 
 
-  $("backBtn").addEventListener(
-    "click",
-    () => {
+    /*
+     * =====================================================
+     * START
+     * =====================================================
+     */
 
-      $("name1").value =
-        state.names[0];
+    loadComments();
 
-      $("name2").value =
-        state.names[1];
-
-
-      $("board")
-        .classList.add("hidden");
-
-
-      $("setup")
-        .classList.remove("hidden");
-
-
-      window.scrollTo({
-        top:0,
-        behavior:"smooth"
-      });
-
-    }
-  );
-
-})();
 </script>
 
 </body>
